@@ -25,12 +25,8 @@
 
 int debug_state = 0;
 float ledLevel1 = 0;
-float ledLevel2 = 0;
-float ledLevel3 = 0;
 
-int led1 = 5;
-int led2 = 6;
-int led3 = 9;
+int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
 
  const int Sinewave[N_WAVE-N_WAVE/4] PROGMEM = {
    0,    201,    402,    603,    804,   1005,   1206,   1406,
@@ -214,8 +210,13 @@ int led3 = 9;
  int       x[N], fx[N];
  int      incomingByte;
  int   i, count, scale;
- int kraccums = 0, zlaccums = 0, snaccums = 0;
- int kraccumn = 0, zlaccumn = 0, snaccumn = 0;
+ 
+ const int PING_PONG_BINS = 16;
+ int accum_s[PING_PONG_BINS];
+ int accum_n[PING_PONG_BINS];
+ // remove this once refactor is complete
+ //int kraccums = 0, zlaccums = 0, snaccums = 0;
+ //int kraccumn = 0, zlaccumn = 0, snaccumn = 0;
 
  int sdvig = 32768; //DC bias of the ADC, approxim +2.5V. (kompensaciya post. sostavlyauschei).
  int minim = 0;
@@ -283,7 +284,7 @@ int led3 = 9;
      x[i]=analogRead(A0);
      x[i] -=  771;
      //x[i] *= 256;
-     delayMicroseconds(50);
+     ///delayMicroseconds(1);
      if (i & 0x01)
        fx[(N+i)>>1] = x[i] ;
      else
@@ -301,44 +302,39 @@ int led3 = 9;
      fx[i] = sqrt((long)fx[i] * (long)fx[i] + (long)fx[i+N/2] * (long)fx[i+N/2]);
    }
 
- //Show data on three color LEDs display:
-
-   kraccums = kraccumn;  //Save old data for each band RGB, for smoothing;
-   zlaccums = zlaccumn;
-   snaccums = snaccumn;
-
-   kraccumn = 0;  //Reset
-   zlaccumn = 0;
-   snaccumn = 0;
-
-   for ( count = 1; count < 11; count++ )
+ //Show data on three color LEDs display: 
+   for ( i = 0; i <  PING_PONG_BINS; i++ )
    {
-     kraccumn = kraccumn + fx[count]; //Red band, no zero bin, don't use DC component.
+     // Save old data for each band RGB, for smoothing;
+     accum_s[i] = accum_n[i];
+     // Reset
+     accum_n[i] = 0;
    }
 
-   for ( count = 11; count < 21; count++ )
+   // Start at 1 to skip bin 0 with the DC component
+   for ( count = 1; count < 32; count++ )
    {
-     zlaccumn = zlaccumn + fx[count]; //Green band
+     accum_n[count/2] = accum_n[count/2] + fx[count];
+   }
+   
+   for ( i = 0; i <  PING_PONG_BINS; i++ )
+   {
+     // Smoothing, so it fall down gradually. 
+     if ( accum_n[i] < (accum_s[i] * kdmp) )
+       accum_n[i] = (accum_s[i] * kdmp);
    }
 
-   for ( count = 21; count < 32; count++ )
+   boolean any_greater_than_maxim = false;
+   vrem = accum_n[0];
+   for ( i = 0; i <  PING_PONG_BINS; i++ )
    {
-     snaccumn = snaccumn + fx[count]; //Blue band
+     any_greater_than_maxim |= (accum_n[i] > maxim);
+     vrem = max( vrem, accum_n[i] );
    }
-
- //Smoothing, so it fall down gradually. 
-   if ( kraccumn < (kraccums * kdmp) )
-     kraccumn = (kraccums * kdmp);
-   if ( zlaccumn < (zlaccums * kdmp) )
-     zlaccumn = (zlaccums * kdmp);
-   if ( snaccumn < (snaccums * kdmp) )
-     snaccumn = (snaccums * kdmp);
 
  //Visual Display AGC for all three band
-   if ( kraccumn > maxim || zlaccumn > maxim || snaccumn > maxim)
+   if ( any_greater_than_maxim )
    {
-     vrem = max( kraccumn, zlaccumn );
-     vrem = max( vrem, snaccumn );
      maxim = vrem ;
    }
    else {
@@ -348,18 +344,13 @@ int led3 = 9;
 
    // Output fft to leds
    //maxim = maxim >> 16;
-   //kraccumn = kraccumn >> 16;
-   //snaccumn = snaccumn >> 16;
-   //zlaccumn = zlaccumn >> 16;
    //if(maxim > 0) {
-     ledLevel1 = ((float)(kraccumn)/ 3.0 ) ; //(float)(maxim))*160.0;
-     analogWrite(led1,(int)(ledLevel1));
-     
-     ledLevel2 = ((float)(zlaccumn)/ 3.0 ) ; //(float)(maxim))*160.0;
-     analogWrite(led2,(int)(ledLevel2));
-     
-     ledLevel3 = ((float)(snaccumn)/ 3.0 ) ; //(float)(maxim))*160.0;
-     analogWrite(led3,(int)(ledLevel3));    
+     for ( i = 0; i <  PING_PONG_BINS; i++ )
+     {
+       //accum_n[i] = accum_n[i] >> 16;
+       ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
+       analogWrite(led[i],(int)(ledLevel1));
+     }
    //}
    //else {
    //  analogWrite(led1,0);
@@ -367,10 +358,6 @@ int led3 = 9;
    //  analogWrite(led3,0);     
    //}
 
-//Bogus output of signal to LEDS
-//analogWrite(A1,(analogRead(A0)/4)-100);
-//analogWrite(A2,(analogRead(A0)/4)-100);
-//analogWrite(A3,(analogRead(A0)/4)-100);
     switch ( debug_state ) {
       case 0: // no debug
         break;
@@ -384,12 +371,6 @@ int led3 = 9;
           }
           Serial.println("");
         }
-        Serial.println("");
-        Serial.println(kraccumn);
-        Serial.println(zlaccumn);
-        Serial.println(snaccumn);
-        Serial.println(maxim);
-        Serial.println(ledLevel3);
         delay(500);
         break;
       case 2: // signal
@@ -397,11 +378,19 @@ int led3 = 9;
           int jj;
           for( jj = 0; jj < abs(x[i]/2); jj++ )
           {
-            Serial.print("*");
+            Serial.print(" ");
           }
-          Serial.println("");
+          Serial.println("*");
         }
-        Serial.println("");
+        delay(500);
+        break;
+      case 3: // ping pong spectrum
+        for ( i = 0; i <  PING_PONG_BINS; i++ )
+        {
+          Serial.println(accum_n[i]);
+        }
+        Serial.println(maxim);
+        Serial.println(ledLevel1);
         delay(500);
         break;
     }
@@ -419,28 +408,21 @@ int led3 = 9;
       if (incomingByte == 'c') {
         debug_state = 2;
       }
-        if (incomingByte == 'q') {
-           Serial.print("kracc");
-           Serial.print(kraccumn);
-           Serial.print(",");
-           Serial.print(maxim);
-           Serial.print(",");
-           Serial.print(ledLevel1);
+      if (incomingByte == 'd') {
+        debug_state = 3;
+      }
+      if (incomingByte == 'q') {
+        Serial.print("maxim=");
+        Serial.print(maxim);
+        Serial.println("");
+        for ( i = 0; i <  PING_PONG_BINS; i++ )
+        {
+           Serial.print("accum_n[");
+           Serial.print(i);
+           Serial.print("]=");
+           Serial.print(accum_n[i]);
            Serial.println("");
-
-           Serial.print("zlacc");
-           Serial.print(zlaccumn);
-           Serial.print(",");
-           Serial.print(maxim);
-           Serial.print(",");
-           Serial.println(ledLevel2);
-
-           Serial.print("snacc");
-           Serial.print(snaccumn);
-           Serial.print(",");
-           Serial.print(maxim);
-           Serial.print(",");
-           Serial.println(ledLevel3);
+        }
       }
     
     
@@ -461,12 +443,14 @@ int led3 = 9;
          Serial.print(",");
          //if ((i+1)%10 == 0) Serial.print("\n");
        }
-       Serial.print("\n Red accum. :");
-       Serial.print(kraccumn, DEC);
-       Serial.print("\n Green accum. :");
-       Serial.print(zlaccumn, DEC);
-       Serial.print("\n Blue accum. :");
-       Serial.print(snaccumn, DEC);
+       for ( i = 0; i <  PING_PONG_BINS; i++ )
+       {
+          Serial.print("accum_n[");
+          Serial.print(i);
+          Serial.print("]=");
+          Serial.print(accum_n[i], DEC);
+          Serial.println("");
+       }
        Serial.print("\n MAXIM: ");
        Serial.print(maxim, DEC);
        Serial.print("\n");
