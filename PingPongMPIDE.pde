@@ -1,3 +1,5 @@
+#include <SoftPWMServo.h>
+
 //#include <avr/pgmspace.h>
 
  /* fix_fft.c - Fixed-point in-place Fast Fourier Transform  */
@@ -237,7 +239,7 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
    10, 11, 12, 13 };// an array of pin numbers to which blue LEDs are attached
 
  void setup() {
-
+   //SoftPWMServoInit();
   // loop over the pin array and set them all to output:
    for (int thisLed = 0; thisLed < ledCountKr; thisLed++) {
      pinMode(ledPinsKr[thisLed], OUTPUT);
@@ -349,7 +351,7 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
      {
        //accum_n[i] = accum_n[i] >> 16;
        ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
-       analogWrite(led[i],(int)(ledLevel1));
+       SoftPWMServoPWMWrite(led[i],(int)(ledLevel1));
      }
    //}
    //else {
