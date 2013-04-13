@@ -1,5 +1,5 @@
 #include <SoftPWMServo.h>
-
+//#include <SoftPWM.h>
 //#include <avr/pgmspace.h>
 
  /* fix_fft.c - Fixed-point in-place Fast Fourier Transform  */
@@ -28,7 +28,9 @@
 int debug_state = 0;
 float ledLevel1 = 0;
 
-int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
+//Originally, only pins capable of PWM throughput were
+//3,5,6,9
+int led[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
 
  const int Sinewave[N_WAVE-N_WAVE/4] PROGMEM = {
    0,    201,    402,    603,    804,   1005,   1206,   1406,
@@ -239,7 +241,8 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
    10, 11, 12, 13 };// an array of pin numbers to which blue LEDs are attached
 
  void setup() {
-   //SoftPWMServoInit();
+  //SoftPWMServoInit();
+  //SoftPWMBegin();
   // loop over the pin array and set them all to output:
    for (int thisLed = 0; thisLed < ledCountKr; thisLed++) {
      pinMode(ledPinsKr[thisLed], OUTPUT);
@@ -352,6 +355,7 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
        //accum_n[i] = accum_n[i] >> 16;
        ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
        SoftPWMServoPWMWrite(led[i],(int)(ledLevel1));
+       //SoftPWMSet(led[i],(int)(ledLevel1));
      }
    //}
    //else {
@@ -413,30 +417,6 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
       if (incomingByte == 'd') {
         debug_state = 3;
       }
-      if (incomingByte == 'q') {
-        Serial.print("maxim=");
-        Serial.print(maxim);
-        Serial.println("");
-        for ( i = 0; i <  PING_PONG_BINS; i++ )
-        {
-           Serial.print("accum_n[");
-           Serial.print(i);
-           Serial.print("]=");
-           Serial.print(accum_n[i]);
-           Serial.println("");
-        }
-      }
-    
-    
-     if (incomingByte == 'x') {
-       for (i=0; i<N/2; i++){
-         Serial.print(x[i], DEC);
-         Serial.print(", ");
-         if ((i+1)%10 == 0) Serial.print("\n");
-       }
-       Serial.print("\n");
-       delay(2000);
-     }
  // f command - printout data after FFT. Clear view of each bin in the spectrum.
  // Plus printing summary accumulator for each band and variable MAXIM.
      if (incomingByte == 'f') {
@@ -445,6 +425,7 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
          Serial.print(",");
          //if ((i+1)%10 == 0) Serial.print("\n");
        }
+       
        for ( i = 0; i <  PING_PONG_BINS; i++ )
        {
           Serial.print("accum_n[");
@@ -460,6 +441,53 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
        delay(200);
      }
 
+      if (incomingByte == 'q') {
+        Serial.print("maxim=");
+        Serial.print(maxim);
+        Serial.println("");
+        for ( i = 0; i <  PING_PONG_BINS; i++ )
+        {
+           Serial.print("accum_n[");
+           Serial.print(i);
+           Serial.print("]=");
+           Serial.print(accum_n[i]);
+           Serial.println("");
+        }
+      }
+// t command - test out fan throughput using SoftPWM
+     if (incomingByte == 't') {
+       for (i=0; i < PING_PONG_BINS; i++){
+         SoftPWMServoPWMWrite(led[i],0);
+         //SoftPWMSetFadeTime(led[i],1000,1000);    
+       }
+       delay(5000);
+       for(i=0; i < PING_PONG_BINS; i++){
+         SoftPWMServoPWMWrite(led[i],255);
+         delay(500);
+       }
+       delay(500);
+       for(i=0; i < PING_PONG_BINS; i++){
+         SoftPWMServoPWMWrite(led[i],0);
+         delay(500);
+       }
+       delay(500);
+     }    
+     if (incomingByte == 'x') {
+       for (i=0; i<N/2; i++){
+         Serial.print(x[i], DEC);
+         Serial.print(", ");
+         if ((i+1)%10 == 0) Serial.print("\n");
+       }
+       Serial.print("\n");
+       delay(2000);
+     }
+ // z command - stop any communication, handy command on Ubuntu.
+     if (incomingByte == 'z') {
+       Serial.println(" STOP in 2 sec.");
+       delay(2000);
+       Serial.end();
+     }
+   }
  //Adjustment Time constant of the AGC, depends on nature of the music.
      if (incomingByte == '1') {
        kary = 0.99;
@@ -479,13 +507,7 @@ int led[] = {3,5,6,9,10,10,10,10,10,10,10,10,10,10,10,10};
        Serial.println(" New value kary = 0.9999.");
        delay(200);
      }
- // z command - stop any communication, handy command on Ubuntu.
-     if (incomingByte == 'z') {
-       Serial.println(" STOP in 2 sec.");
-       delay(2000);
-       Serial.end();
-     }
-   }
+
  // Display, 3 band (RGB), 4 level  Original
 //   int ledLevelKr = map(kraccumn, minim, maxim, 0, ledCountKr);
 //
