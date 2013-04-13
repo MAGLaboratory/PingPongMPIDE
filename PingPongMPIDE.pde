@@ -462,11 +462,13 @@ int led[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
        }
        delay(5000);
        for(i=0; i < PING_PONG_BINS; i++){
+         Serial.println("Fade-in on pin " + led[i] + "...");
          SoftPWMServoPWMWrite(led[i],255);
          delay(500);
        }
        delay(500);
        for(i=0; i < PING_PONG_BINS; i++){
+         Serial.println("Fade-out on pin " + led[i] + "...");
          SoftPWMServoPWMWrite(led[i],0);
          delay(500);
        }
