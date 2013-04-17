@@ -30,8 +30,9 @@ float ledLevel1 = 0;
 
 //Originally, only pins capable of PWM throughput were
 //3,5,6,9
-int led[] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
-
+int led[] = { A1 ,A2,A3,A4,13,29,30,31,32,33,36,37,38,39,40,41};
+//possible pins -- A1, A2, A3, A4, 13, 29, 30, 31, 32, 33
+//                 34, 35, 36, 37, 38, 39, 40, 41
  const int Sinewave[N_WAVE-N_WAVE/4] PROGMEM = {
    0,    201,    402,    603,    804,   1005,   1206,   1406,
    1607,   1808,   2009,   2209,   2410,   2610,   2811,   3011,
