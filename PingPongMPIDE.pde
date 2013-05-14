@@ -310,6 +310,10 @@ int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Ro
    for (i=0; i<N/2; i++)
    {
      fx[i] = sqrt((long)fx[i] * (long)fx[i] + (long)fx[i+N/2] * (long)fx[i+N/2]);
+     if (fx[i] < 0) 
+     {
+       fx[i] = 255;
+     }
    }
 
  //Show data on three color LEDs display:
@@ -359,7 +363,7 @@ int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Ro
      {
        //accum_n[i] = accum_n[i] >> 16;
        ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
-       SoftPWMServoPWMWrite(led[i],(int)(ledLevel1));
+       SoftPWMServoPWMWrite(led[i],(int)(fx[i])); //changed ledlevel
        //SoftPWMSet(led[i],(int)(ledLevel1));
      }
    //}
@@ -375,12 +379,24 @@ int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Ro
       case 1: // spectrum
         for (i=N/4-1; i>=0; i--){
           int jj;
+          int ji;
           Serial.print(i,DEC);
-          for( jj = 0; jj < (fx[i]/2 > 255) ? 255 : fx[i]/2; jj++ )
-          {
-            Serial.print("*");
+          Serial.print("*");
+      //    Serial.println((fx[i]/2 > 255) ? 255 : fx[i]/2);
+      //    ji = (fx[i]/2 > 255) ? 255 : fx[i]/2; // change by Rod
+      //    ji = (fx[i]/2 > 255) ? 255 : fx[i]/2; // change by Rod
+          ji = (x[i]/2 > 255) ? 255 : (x[i]/2 < -255) ? -255 : x[i]/2; // change by Rod
+      //    Serial.println(ji);
+          if (ji < 0) {
+            Serial.println("-");
+          } else {
+      //    for( jj = 0; jj < (fx[i]/2 > 255) ? 255 : fx[i]/2; jj++ )
+            for( jj = 0; jj < ji; jj++ ) // to fix negative result
+            {
+               Serial.print("*");
+            } 
           }
-          Serial.println(".");
+          Serial.println("+");
         }
         delay(500);
         break;
