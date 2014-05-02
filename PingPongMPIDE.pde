@@ -30,12 +30,21 @@ float ledLevel1 = 0;
 int AledLevel[] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // used in test sub
 int ledLevel = 250; // used in test sub
 
+////////////////////////////////////////////////////////////////
+// Analog input pin
+////////////////////////////////////////////////////////////////
+int AnalogInput = A14;
+////////////////////////////////////////////////////////////////
+// The led[] array defines the 16 output pins used for the PWM
+////////////////////////////////////////////////////////////////
 //Originally, only pins capable of PWM throughput were
 //3,5,6,9
 //int led[] = { A1,A2,A3,A4,13,29,30,31,32,33,36,37,38,39,40,41};
-int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Rod
+//int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Rod
+int led[] = { 86,64,5,70,22,76,9,2,23,39,8,21,78,79,10,20}; // Quick Drive Kard Outputs (2-5)
 //possible pins -- A1, A2, A3, A4, 13, 29, 30, 31, 32, 33
 // 34, 35, 36, 37, 38, 39, 40, 41
+
  const int Sinewave[N_WAVE-N_WAVE/4] PROGMEM = {
    0, 201, 402, 603, 804, 1005, 1206, 1406,
    1607, 1808, 2009, 2209, 2410, 2610, 2811, 3011,
@@ -291,7 +300,7 @@ int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Ro
 // ADCSRA = 0x00;
 
    for (i=0; i<N; i++){
-     x[i]=analogRead(A0);
+     x[i]=analogRead(AnalogInput);
  //    x[i] -= 771;
      //x[i] *= 256;
      ///delayMicroseconds(1);
