@@ -158,6 +158,9 @@ const int Sinewave[N_WAVE-N_WAVE/4] PROGMEM = {
   -32727, -32736, -32744, -32751, -32757, -32761, -32764, -32766
 };
 
+char demostep = 0;
+unsigned long demotime = 0;
+
 int fix_fft(int fr[], int fi[], int m )
 {
   int mr, nn, i, j, l, k, istep, n, scale, shift;
@@ -281,7 +284,7 @@ void setup() {
   for (int thisLed = 0; thisLed < ledCountSn; thisLed++) {
     pinMode(ledPinsSn[thisLed], OUTPUT);
   }
-
+  pinMode(C0IO1,INPUT);
   // initialize serial communication, for debug purposes mostly,
   //be careful with serial on Linux (Ubuntu), it hangs up periodicaly:
   Serial.begin(115200);
@@ -393,12 +396,25 @@ void loop()
   // Output fft to leds
   //maxim = maxim >> 16;
   //if(maxim > 0) {
-  for ( i = 0; i < PING_PONG_BINS; i++ )
-  {
-    //accum_n[i] = accum_n[i] >> 16;
-    ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
-    SoftPWMServoPWMWrite(led[i],(int)(fx[i])); //changed ledlevel
-    //SoftPWMSet(led[i],(int)(ledLevel1));
+  if(digitalRead(C0IO1) == LOW) { // fft mode
+    for ( i = 0; i < PING_PONG_BINS; i++ )
+    {
+      //accum_n[i] = accum_n[i] >> 16;
+      ledLevel1 = ((float)(accum_n[i])) ; //(float)(maxim))*160.0;
+      SoftPWMServoPWMWrite(led[i],(int)(fx[i])); //changed ledlevel
+      //SoftPWMSet(led[i],(int)(ledLevel1));
+    }
+  } else { //demo mode
+    if (millis() > demotime) {
+      demotime = millis() + 2000;
+      for ( i = 0; i < PING_PONG_BINS; i++ )
+      {
+        SoftPWMServoPWMWrite(led[i],(1==i) ? 255 : 0); //changed ledlevel
+      }
+      demostep = (demostep > 15) ? 0 : demostep + 1;
+      //demostep++;
+      Serial.println("Step");
+    }
   }
   //}
   //else {
