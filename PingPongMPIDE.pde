@@ -55,7 +55,8 @@ unsigned int micros_delay = 50;
 //int led[] = { 32,33,31,35,38,36,34,37,16,15,27,17,30,26,29,28}; // Changed by Rod
 //int led[] = { 86,64,5,70,22,76,9,2,23,39,8,21,78,79,10,20}; // Quick Drive Kard Outputs (2-5) (Kard2 has issue with SoftPWM maybe is uses the clock)
 //int led[] = { 57,56,63,54,22,76,9,2,23,39,8,21,78,79,10,20 }; // Quick Drive Kard Outputs (2-5)
-int led[] = { 20,78,21,57,8,79,10,63,76,39,2,56,54,9,22,23 }; // Quick Drive Ping Pong Ball Order
+//int led[] = { 20,78,21,57, 8,79,10,63,76,39, 2,56,54, 9,22,23 }; // Quick Drive Ping Pong Ball Order
+int led[] = { 57,56,63,54,22,76, 9, 2,23,39, 8,21,78,79,10,20 }; // Quick Drive Ping Pong Ball Order Brian to re-wire
 //possible pins -- A1, A2, A3, A4, 13, 29, 30, 31, 32, 33
 // 34, 35, 36, 37, 38, 39, 40, 41
 
