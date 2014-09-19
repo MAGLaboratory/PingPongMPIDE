@@ -417,7 +417,7 @@ void loop()
       }
       demostep = (demostep > 16) ? 0 : demostep + 1;
       //demostep++;
-      Serial.println("Step");
+      //Serial.println("Step");
     }
   }
   //}
