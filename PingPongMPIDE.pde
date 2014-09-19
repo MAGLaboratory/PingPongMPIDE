@@ -407,12 +407,15 @@ void loop()
     }
   } else { //demo mode
     if (millis() > demotime) {
-      demotime = millis() + 2000;
+      demotime = millis() + 250;
       for ( i = 0; i < PING_PONG_BINS; i++ )
       {
-        SoftPWMServoPWMWrite(led[i],(1==i) ? 255 : 0); //changed ledlevel
+        //SoftPWMServoPWMWrite(led[i],(demostep>i) ? 255 : 0); //one at a time
+        int difabs = absint(demostep-i);
+        int mult = (difabs<5 ? difabs : (difabs>11 ? 16-difabs : 5));
+        SoftPWMServoPWMWrite(led[i],250-mult*50); //wave
       }
-      demostep = (demostep > 15) ? 0 : demostep + 1;
+      demostep = (demostep > 16) ? 0 : demostep + 1;
       //demostep++;
       Serial.println("Step");
     }
@@ -698,7 +701,10 @@ void loop()
   // }
 }
 
-
+int absint(int x) {
+  if(x>0) return x;
+  return x*(-1);
+}
 
 
 
